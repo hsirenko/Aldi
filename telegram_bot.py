@@ -20,64 +20,60 @@ import torch
 from transformers import AutoTokenizer, AutoModel
 import openai
 
-class ProductRAG:
-    def __init__(self, df_description, openai_api_key):
-        self.model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        self.model = AutoModel.from_pretrained(self.model_name)
-        self.df = df_description
-        self.index = None
-        self.openai_api_key = openai_api_key
-        self.build_index()
+# class ProductRAG:
+#     def __init__(self, df_description, openai_api_key):
+#         self.model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+#         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+#         self.model = AutoModel.from_pretrained(self.model_name)
+#         self.df = df_description
+#         self.index = None
+#         self.openai_api_key = openai_api_key
+#         self.build_index()
 
-    def encode_descriptions(self, descriptions):
-        encoded_input = self.tokenizer(descriptions, padding=True, truncation=True, return_tensors="pt", max_length=128)
-        with torch.no_grad():
-            model_output = self.model(**encoded_input)
-            embeddings = model_output.last_hidden_state.mean(dim=1)
-        return embeddings.numpy()
+    # def encode_descriptions(self, descriptions):
+    #     encoded_input = self.tokenizer(descriptions, padding=True, truncation=True, return_tensors="pt", max_length=128)
+    #     with torch.no_grad():
+    #         model_output = self.model(**encoded_input)
+    #         embeddings = model_output.last_hidden_state.mean(dim=1)
+    #     return embeddings.numpy()
 
-    def build_index(self):
-        descriptions = self.df['description'].tolist()
-        embeddings = self.encode_descriptions(descriptions)
-        self.index = faiss.IndexFlatL2(embeddings.shape[1])
-        self.index.add(embeddings)
+    # def build_index(self):
+    #     descriptions = self.df['description'].tolist()
+    #     embeddings = self.encode_descriptions(descriptions)
+    #     self.index = faiss.IndexFlatL2(embeddings.shape[1])
+    #     self.index.add(embeddings)
 
-    def search(self, p_desc, k):
-        query_embedding = self.encode_descriptions([p_desc])
-        distances, indices = self.index.search(query_embedding, k)
-        return self.df.iloc[indices[0]]
+    # def search(self, p_desc, k):
+    #     query_embedding = self.encode_descriptions([p_desc])
+    #     distances, indices = self.index.search(query_embedding, k)
+    #     return self.df.iloc[indices[0]]
 
-    def ask_question(self, input_description, k, question):
-        similar_products = self.search(input_description, k)
-        descriptions = similar_products['description'].tolist()
+    # def ask_question(self, input_description, k, question):
+    #     similar_products = self.search(input_description, k)
+    #     descriptions = similar_products['description'].tolist()
 
-        print ('\n----------------------------------------------\n')
-        print ('similar_products: ', similar_products)
-        context = f"Input product: {input_description}. Products for comparison with input product: " + ", ".join(descriptions)
-        print ('\n----------------------------------------------\n')
-        print ('context:: ', context)
-        print ('\n----------------------------------------------\n')
-        return self.generate_response(question, context)
-
-
-    def generate_response(self, question, context):
-        openai.api_key = self.openai_api_key
-        prompt = f"Question: {question}\nContext: {context}\nAnswer:"
-        response = openai.ChatCompletion.create(
-            model='gpt-4o-2024-05-13',
-            temperature=0,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0,
-            messages=[{"role": "system", "content": "You are a helpful assistant."},
-                      {"role": "user", "content": prompt}]
-        )
-        return response['choices'][0]['message']['content'].strip()
+    #     print ('\n----------------------------------------------\n')
+    #     print ('similar_products: ', similar_products)
+    #     context = f"Input product: {input_description}. Products for comparison with input product: " + ", ".join(descriptions)
+    #     print ('\n----------------------------------------------\n')
+    #     print ('context:: ', context)
+    #     print ('\n----------------------------------------------\n')
+    #     return self.generate_response(question, context)
 
 
-
-
+    # def generate_response(self, question, context):
+    #     openai.api_key = self.openai_api_key
+    #     prompt = f"Question: {question}\nContext: {context}\nAnswer:"
+    #     response = openai.ChatCompletion.create(
+    #         model='gpt-4o-2024-05-13',
+    #         temperature=0,
+    #         top_p=1,
+    #         frequency_penalty=0,
+    #         presence_penalty=0,
+    #         messages=[{"role": "system", "content": "You are a helpful assistant."},
+    #                   {"role": "user", "content": prompt}]
+    #     )
+    #     return response['choices'][0]['message']['content'].strip()
 
 
 
@@ -147,28 +143,28 @@ async def upload_image(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     await photo_file.download_to_drive("product_image.jpg")
     logger.info("Photo of %s: %s", user.first_name, "product_image.jpg")
 
-    # Retrieve product_rag from context
-    product_rag = context.bot_data['product_rag']
+    # # Retrieve product_rag from context
+    # product_rag = context.bot_data['product_rag']
 
-    print ('product_rag')
-
-
-    # User input description for ALDI's waffles
-    aldis_waffles_input = "Aldi's vanilla waffles 500g"
-
-    # Asking a comparative question about ALDI's waffles compared to similar products from Netto and Lidl
-    comparative_question = 'check the nutritional labels of each product online and tell Which is healthier, the input or the similar products?'
-
-    # Getting the answer by comparing the top 3 similar products
-    answer = product_rag.ask_question(aldis_waffles_input, 3, comparative_question)
-
-    # Print the answer provided by the RAG system
-    print(answer)
+    # print ('product_rag')
 
 
-    await update.message.reply_text(
-        answer
-    )
+    # # User input description for ALDI's waffles
+    # aldis_waffles_input = "Aldi's vanilla waffles 500g"
+
+    # # Asking a comparative question about ALDI's waffles compared to similar products from Netto and Lidl
+    # comparative_question = 'check the nutritional labels of each product online and tell Which is healthier, the input or the similar products?'
+
+    # # Getting the answer by comparing the top 3 similar products
+    # answer = product_rag.ask_question(aldis_waffles_input, 3, comparative_question)
+
+    # # Print the answer provided by the RAG system
+    # print(answer)
+
+
+    # await update.message.reply_text(
+    #     answer
+    # )
 
     return ConversationHandler.END
 
@@ -194,13 +190,13 @@ def main() -> None:
         ]
     })
 
-    product_rag = ProductRAG(df_description, 'sk-proj-KPmObpzz1tZO2uSsVLdMT3BlbkFJZeQ8Q9Ys5H8K5CRRdtzH')
-    # Store product_rag in bot_data
+    # product_rag = ProductRAG(df_description, 'sk-proj-KPmObpzz1tZO2uSsVLdMT3BlbkFJZeQ8Q9Ys5H8K5CRRdtzH')
+    # # Store product_rag in bot_data
    
 
     # Create the Application and pass it your bot's token.
     application = Application.builder().token("7389289933:AAGiJFsmA6RZlXqGiPU8KcPHs1Troq7K-WY").build()
-    application.bot_data['product_rag'] = product_rag
+    # application.bot_data['product_rag'] = product_rag
 
     # Add conversation handler with the states ASK_QUESTION, ENTER_COMPETITOR, UPLOAD_IMAGE
     conv_handler = ConversationHandler(
