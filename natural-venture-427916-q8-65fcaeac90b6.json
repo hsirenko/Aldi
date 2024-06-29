@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "natural-venture-427916-q8",
+  "private_key_id": "65fcaeac90b64b0bb3457012b389519c1d696bf3",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCvWtHSSw92bh2o\nQw3VULEU6XDYSEkrvzvyMXoID4rui+ywGvP5AHLEgk3wjoYyWT1Y/FAS32YfKGCK\nnGT2guKjz/tJSLnFyLNCqugAw7gHEyP+YFu5rIglGY7MVk93GH42QCQcarbtUheA\nB7XiUpYRY8pDqxuyLj938PHVnniqv7+iOqZ3SvFJO36xa6lZJCmS+kj9/kzvULdd\nM6NkDvIUlgoRz+MXD/m8rOl+t2vsnXlIJAB/+pX1YhA6uB7UkrXscyVVSM+Kb58+\nOISALuwA1j/L8xxldrGaybqr66ldGYpJTcT70m7r1HNVMn7kT8XVYL8X5ROXrU2/\nsSM/HCW1AgMBAAECggEARYJ4OuaDHhx/SBQwdxbx4wq4LxvUWXGINzSynWBf37h6\nncJJZLJvTAMlFw7AFlQ2k8AMk7aXehFc14UwJmFyqqHGh+G6tjKdEHfD2I28tJ07\nPtn+cib4ntA3QTuTa2+7lBCv383TblaEtz0XNbwr/X+zjUhWBbb8dLR/gIC9b11C\nNi5Thy2XONf+HwF2qOHJBIKmpn0lcIRi9l9j1qiL41L48MxKhpe/59bQxnwErkPM\nQky/yYHjzd3da8ISyHVZ1nfCTEmTMNgZss1o8JMA6At/VTfLCYz39vr/OoXf2n6s\nabjznXdyZsei4lk0WNYECaQD1LULN91vlf+fp+rr3wKBgQD1WBPSZ7a0u2aQfzrH\nm1AhUi+/Zj1EjFR+EOOsJn/RFHs8VS2uRWU7CP3WhJ+Cen7C7CA+ZL2uLMfR7KZT\nk+Hqj9mw5RGWJt0ltyZcqY1j3et69gYgx3qkS6IQEBmfGss4YFTVodtEjtDnFNCZ\niLqZBJogMX9ztUbrxXdQRODzowKBgQC2+Iw96m1aOdntS14rqQBxD3+PNpo7biqq\n13xzcZD549RDkmpeYDEkkeLpW/fnS3Tydbl3PaCv32ib/lfkYsKyXPaM/WjPrX8L\n6gvlT+nSuR9J4aLlTbiiNU10pDITjs37vXjPmMQvgAffTb+3gVnGSjH0PG5iwQ0s\nFbytimJWxwKBgQCPZ+s2Kh82Zu+deHDAKb1drK9yHe2j+q6MfYzGnD5L1L/v1Q39\ndlykdC4DTMP7vWQIxYJXVgU1IMGvp7bU1XTQ6UJiTpLIBHFxUSugMA8QF7BD0Dhm\nwpKiI/9XikGfqUat7kjIEnKbESt0VstTYwNG29THCoen94a721FRXuFqJwKBgGUg\njnKSJQpfOyG6LDw5VjMm+7ut1CTQyOhP3Ur5E8XptCH8xKmQxNiPgTi1ShkeTW7M\nvks3Vp6d/fVp6C4kn7NxShu2270dCUEOhLCjMHr1MmPlP+E4yblteHflYIAKx7JB\nkIo8xwHx42f6UuIbrgC4dU+mLuSKCru47+WCvMN1AoGBAMXSfcobilZAhXAIRol3\nIPzXOArk8XQ4WnJeqv2pU/TQWPROH0wtbtv7iWornBl4Hb4+JN97/Kpo8Kt7zuaB\nrcBnsKhYpFDHEEYM8ZpgdpxcwWLagNVyNVV/dganVTEwM72qhTCQ4jedDQPeV7CN\noT4wjRIk0umW8wDiVrs/Ha2J\n-----END PRIVATE KEY-----\n",
+  "client_email": "aldi-166@natural-venture-427916-q8.iam.gserviceaccount.com",
+  "client_id": "112716452377880886899",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/aldi-166%40natural-venture-427916-q8.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
