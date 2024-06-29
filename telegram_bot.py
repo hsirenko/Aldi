@@ -15,7 +15,6 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 import faiss
 import numpy as np
-import pandas as pd
 import torch
 from transformers import AutoTokenizer, AutoModel
 import openai
@@ -52,20 +51,14 @@ import openai
 #         similar_products = self.search(input_description, k)
 #         descriptions = similar_products['description'].tolist()
 
-#         print ('\n----------------------------------------------\n')
-#         print ('similar_products: ', similar_products)
 #         context = f"Input product: {input_description}. Products for comparison with input product: " + ", ".join(descriptions)
-#         print ('\n----------------------------------------------\n')
-#         print ('context:: ', context)
-#         print ('\n----------------------------------------------\n')
 #         return self.generate_response(question, context)
-
 
 #     def generate_response(self, question, context):
 #         openai.api_key = self.openai_api_key
 #         prompt = f"Question: {question}\nContext: {context}\nAnswer:"
 #         response = openai.ChatCompletion.create(
-#             model='gpt-4o-2024-05-13',
+#             model='gpt-4-0613',
 #             temperature=0,
 #             top_p=1,
 #             frequency_penalty=0,
@@ -75,128 +68,73 @@ import openai
 #         )
 #         return response['choices'][0]['message']['content'].strip()
 
-
-
-
-#Enable logging
+# Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-# Define conversation states
-ASK_SCENARIO, ASK_QUESTION, ENTER_COMPETITOR, UPLOAD_IMAGE = range(4)
-
-# Define the different scenarios and their corresponding prompts
-scenarios = {
-    'Scan Aldi Product': [
-        "What are the similar products from competitors with comprehensive ingredient and nutrient data?",
-        "What's the difference between Aldi Products and our competitor's similar products regarding ingredients and nutrients?",
-        "What certifications (gluten-free, vegan, fair trade) do the competitor's product have?",
-        "What would make our products more appealing compared to competitor's product?"
-    ],
-    'Scan Competitor Product': [
-        "What are the similar products from other competitors with comprehensive ingredient and nutrient data?",
-        "What's the difference between competitor's similar products regarding ingredients and nutrients?",
-        "What certifications (gluten-free, vegan, fair trade) do the competitor's product have?",
-        "What's the most similar product that Aldi have with comprehensive ingredient and nutrient data?"
-    ]
-}
-
-# Define conversation states
-ASK_SCENARIO, ASK_QUESTION, ENTER_COMPETITOR, UPLOAD_IMAGE = range(4)
-
-# Define the different scenarios and their corresponding prompts
-scenarios = {
-    'Scan Aldi Product': [
-        "What are the similar products from competitors with comprehensive ingredient and nutrient data?",
-        "What's the difference between Aldi Products and our competitor's similar products regarding ingredients and nutrients?",
-        "What certifications (gluten-free, vegan, fair trade) do the competitor's product have?",
-        "What would make our products more appealing compared to competitor's product?"
-    ],
-    'Scan Competitor Product': [
-        "What are the similar products from other competitors with comprehensive ingredient and nutrient data?",
-        "What's the difference between competitor's similar products regarding ingredients and nutrients?",
-        "What certifications (gluten-free, vegan, fair trade) do the competitor's product have?",
-        "What's the most similar product that Aldi have with comprehensive ingredient and nutrient data?"
-    ]
-}
+ASK_IMAGE, ASK_COMPANY, ASK_QUESTION = range(3)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Starts the conversation and asks the user to choose a scenario."""
-    reply_keyboard = [['Scan Aldi Product', 'Scan Competitor Product']]
+    """Starts the conversation and asks the user to upload an image of their product."""
     await update.message.reply_text(
-        "Hi! I'm your product comparison bot. Choose a scenario:",
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+        "Hi! I'm your product comparison bot. Please upload an image of your product.",
+        reply_markup=ReplyKeyboardRemove(),
     )
-    return ASK_SCENARIO
+    return ASK_IMAGE
 
-async def ask_scenario(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Stores the chosen scenario and asks for a question."""
-    user = update.message.from_user
-    scenario = update.message.text
-    context.user_data['scenario'] = scenario
-    logger.info("Scenario from %s: %s", user.first_name, scenario)
-
-    if scenario in scenarios:
-        prompt_text = "You can ask questions like:\n" + "\n".join(scenarios[scenario])
-        await update.message.reply_text(
-            f"You chose: {scenario}\n{prompt_text}\n\nPlease ask your question:"
-        )
-    else:
-        await update.message.reply_text("Please choose a valid scenario.")
-        return ASK_SCENARIO
-
-    return ASK_QUESTION
-
-async def ask_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Stores the question and asks for the competitor's name."""
-    user = update.message.from_user
-    context.user_data['question'] = update.message.text
-    logger.info("Question from %s: %s", user.first_name, update.message.text)
-    await update.message.reply_text(
-        "Got it. Now, enter the competitor name:",
-    )
-    return ENTER_COMPETITOR
-
-async def enter_competitor(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Stores the competitor's name and asks for a product image."""
-    user = update.message.from_user
-    context.user_data['competitor'] = update.message.text
-    logger.info("Competitor name from %s: %s", user.first_name, update.message.text)
-    await update.message.reply_text(
-        "Great! Now, please upload an image of the product:",
-    )
-    return UPLOAD_IMAGE
-
-async def upload_image(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Stores the product image and provides an output based on the scenario."""
+async def ask_image(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Stores the product image and asks for the company name."""
     user = update.message.from_user
     photo_file = await update.message.photo[-1].get_file()
     await photo_file.download_to_drive("product_image.jpg")
+    context.user_data['product_image'] = "product_image.jpg"
     logger.info("Photo of %s: %s", user.first_name, "product_image.jpg")
+
+    await update.message.reply_text(
+        "Please tell me the name of the company this product is from.",
+    )
+    return ASK_COMPANY
+
+async def ask_company(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Stores the company name and asks for the user's question."""
+    user = update.message.from_user
+    context.user_data['company'] = update.message.text
+    logger.info("Company name from %s: %s", user.first_name, update.message.text)
+
+    prompts = [
+        "📊 Compare calorie amount of [input] and [similar products].",
+        "💲 Compare the price of [similar products].",
+        "🍬 Compare the amount of sugar of [input] and [similar products].",
+        "⚠️ Compare the allergens of [input] and [similar products].",
+        "🥣 Compare the ingredients of [input] and [similar products].",
+        "📋 Give me an overview of the ingredients and nutrients of [similar products]."
+    ]
+    prompt_text = "\n".join(prompts)
+
+    await update.message.reply_text(
+        "❓ Please tell me your question.\n"
+        f"You can ask something like:\n{prompt_text}",
+    )
+    return ASK_QUESTION
+
+async def ask_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Stores the user's question and provides an answer."""
+    user = update.message.from_user
+    context.user_data['question'] = update.message.text
+    logger.info("Question from %s: %s", user.first_name, update.message.text)
 
     # Retrieve product_rag from context
     # product_rag = context.bot_data['product_rag']
-    
-    # Retrieve user inputs
-    question = context.user_data['question']
-    scenario = context.user_data['scenario']
 
-    # User input description for ALDI's waffles
-    if scenario == 'Scan Aldi Product':
-        input_description = "Aldi's vanilla waffles 500g"
-    else:
-        input_description = context.user_data['competitor']  # Adjust this as needed
+    # User input description for the product
+    input_description = "Sample product description for demonstration"  # Modify this as needed
 
-    # Asking the comparative question
-    # answer = product_rag.ask_question(input_description, 3, question)
-
-    # Print the answer provided by the RAG system
-    # print(answer)
+    # Asking the question and getting the answer
+    # answer = product_rag.ask_question(input_description, 3, context.user_data['question'])
 
     # await update.message.reply_text(answer)
-
     return ConversationHandler.END
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -220,25 +158,28 @@ def main() -> None:
         ]
     })
 
-    # product_rag = ProductRAG(df_description, 'sk-proj-KPmObpzz1tZO2uSsVLdMT3BlbkFJZeQ8Q9Ys5H8K5CRRdtzH')
+    # product_rag = ProductRAG(df_description, 'YOUR_OPENAI_API_KEY')
     
     # Create the Application and pass it your bot's token.
     application = Application.builder().token("7389289933:AAGiJFsmA6RZlXqGiPU8KcPHs1Troq7K-WY").build()
     # application.bot_data['product_rag'] = product_rag
 
-    # Add conversation handler with the states ASK_SCENARIO, ASK_QUESTION, ENTER_COMPETITOR, UPLOAD_IMAGE
+    # Add conversation handler with the states ASK_IMAGE, ASK_COMPANY, ASK_QUESTION
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
-            ASK_SCENARIO: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_scenario)],
+            ASK_IMAGE: [MessageHandler(filters.PHOTO, ask_image)],
+            ASK_COMPANY: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_company)],
             ASK_QUESTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_question)],
-            ENTER_COMPETITOR: [MessageHandler(filters.TEXT & ~filters.COMMAND, enter_competitor)],
-            UPLOAD_IMAGE: [MessageHandler(filters.PHOTO, upload_image)],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
     )
 
     application.add_handler(conv_handler)
+
+    # Add a handler for the welcome message
+    application.add_handler(CommandHandler("start", start))
+    
     try:
         # Run the bot until the user presses Ctrl-C
         application.run_polling(allowed_updates=Update.ALL_TYPES)
