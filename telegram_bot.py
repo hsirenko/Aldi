@@ -25,6 +25,28 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         "Hi! I'm your product comparison bot. Ask a question about your product:",
         reply_markup=ReplyKeyboardRemove(),
     )
+
+    update_queue = None  # Create an instance of UpdateQueue
+    updater = Updater(bot=bot, update_queue=update_queue)
+    
+    dispatcher = updater.dispatcher
+
+    # Command handler for /start
+    dispatcher.add_handler(CommandHandler('start', start))
+
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('start', start)],
+        states={
+            ASK_QUESTION: [MessageHandler(Filters.text & ~Filters.command, ask_question)],
+            ENTER_COMPETITOR: [MessageHandler(Filters.text & ~Filters.command, enter_competitor)],
+            UPLOAD_IMAGE: [MessageHandler(Filters.photo, upload_image)],
+        },
+        fallbacks=[CommandHandler('cancel', cancel)],
+    )
+
+    # dp.add_handler(conv_handler)
+    updater.start_polling()
+    updater.idle()
     return ASK_QUESTION
 
 async def ask_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -119,9 +141,11 @@ def main() -> None:
     )
 
     application.add_handler(conv_handler)
-
-    # Run the bot until the user presses Ctrl-C
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    try:
+        # Run the bot until the user presses Ctrl-C
+        application.run_polling(allowed_updates=Update.ALL_TYPES)
+    except Exception as e:
+        logger.error(f"Exception occurred: {e}")
 
 if __name__ == "__main__":
     main()
