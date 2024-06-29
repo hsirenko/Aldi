@@ -1,5 +1,5 @@
 import logging
-from telegram import ReplyKeyboardRemove, Update
+from telegram import ReplyKeyboardRemove, Update, ReplyKeyboardMarkup
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -30,90 +30,123 @@ import openai
 #         self.openai_api_key = openai_api_key
 #         self.build_index()
 
-    # def encode_descriptions(self, descriptions):
-    #     encoded_input = self.tokenizer(descriptions, padding=True, truncation=True, return_tensors="pt", max_length=128)
-    #     with torch.no_grad():
-    #         model_output = self.model(**encoded_input)
-    #         embeddings = model_output.last_hidden_state.mean(dim=1)
-    #     return embeddings.numpy()
+#     def encode_descriptions(self, descriptions):
+#         encoded_input = self.tokenizer(descriptions, padding=True, truncation=True, return_tensors="pt", max_length=128)
+#         with torch.no_grad():
+#             model_output = self.model(**encoded_input)
+#             embeddings = model_output.last_hidden_state.mean(dim=1)
+#         return embeddings.numpy()
 
-    # def build_index(self):
-    #     descriptions = self.df['description'].tolist()
-    #     embeddings = self.encode_descriptions(descriptions)
-    #     self.index = faiss.IndexFlatL2(embeddings.shape[1])
-    #     self.index.add(embeddings)
+#     def build_index(self):
+#         descriptions = self.df['description'].tolist()
+#         embeddings = self.encode_descriptions(descriptions)
+#         self.index = faiss.IndexFlatL2(embeddings.shape[1])
+#         self.index.add(embeddings)
 
-    # def search(self, p_desc, k):
-    #     query_embedding = self.encode_descriptions([p_desc])
-    #     distances, indices = self.index.search(query_embedding, k)
-    #     return self.df.iloc[indices[0]]
+#     def search(self, p_desc, k):
+#         query_embedding = self.encode_descriptions([p_desc])
+#         distances, indices = self.index.search(query_embedding, k)
+#         return self.df.iloc[indices[0]]
 
-    # def ask_question(self, input_description, k, question):
-    #     similar_products = self.search(input_description, k)
-    #     descriptions = similar_products['description'].tolist()
+#     def ask_question(self, input_description, k, question):
+#         similar_products = self.search(input_description, k)
+#         descriptions = similar_products['description'].tolist()
 
-    #     print ('\n----------------------------------------------\n')
-    #     print ('similar_products: ', similar_products)
-    #     context = f"Input product: {input_description}. Products for comparison with input product: " + ", ".join(descriptions)
-    #     print ('\n----------------------------------------------\n')
-    #     print ('context:: ', context)
-    #     print ('\n----------------------------------------------\n')
-    #     return self.generate_response(question, context)
-
-
-    # def generate_response(self, question, context):
-    #     openai.api_key = self.openai_api_key
-    #     prompt = f"Question: {question}\nContext: {context}\nAnswer:"
-    #     response = openai.ChatCompletion.create(
-    #         model='gpt-4o-2024-05-13',
-    #         temperature=0,
-    #         top_p=1,
-    #         frequency_penalty=0,
-    #         presence_penalty=0,
-    #         messages=[{"role": "system", "content": "You are a helpful assistant."},
-    #                   {"role": "user", "content": prompt}]
-    #     )
-    #     return response['choices'][0]['message']['content'].strip()
+#         print ('\n----------------------------------------------\n')
+#         print ('similar_products: ', similar_products)
+#         context = f"Input product: {input_description}. Products for comparison with input product: " + ", ".join(descriptions)
+#         print ('\n----------------------------------------------\n')
+#         print ('context:: ', context)
+#         print ('\n----------------------------------------------\n')
+#         return self.generate_response(question, context)
 
 
+#     def generate_response(self, question, context):
+#         openai.api_key = self.openai_api_key
+#         prompt = f"Question: {question}\nContext: {context}\nAnswer:"
+#         response = openai.ChatCompletion.create(
+#             model='gpt-4o-2024-05-13',
+#             temperature=0,
+#             top_p=1,
+#             frequency_penalty=0,
+#             presence_penalty=0,
+#             messages=[{"role": "system", "content": "You are a helpful assistant."},
+#                       {"role": "user", "content": prompt}]
+#         )
+#         return response['choices'][0]['message']['content'].strip()
 
 
-# Enable logging
+
+
+#Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-ASK_QUESTION, ENTER_COMPETITOR, UPLOAD_IMAGE = range(3)
+# Define conversation states
+ASK_SCENARIO, ASK_QUESTION, ENTER_COMPETITOR, UPLOAD_IMAGE = range(4)
+
+# Define the different scenarios and their corresponding prompts
+scenarios = {
+    'Scan Aldi Product': [
+        "What are the similar products from competitors with comprehensive ingredient and nutrient data?",
+        "What's the difference between Aldi Products and our competitor's similar products regarding ingredients and nutrients?",
+        "What certifications (gluten-free, vegan, fair trade) do the competitor's product have?",
+        "What would make our products more appealing compared to competitor's product?"
+    ],
+    'Scan Competitor Product': [
+        "What are the similar products from other competitors with comprehensive ingredient and nutrient data?",
+        "What's the difference between competitor's similar products regarding ingredients and nutrients?",
+        "What certifications (gluten-free, vegan, fair trade) do the competitor's product have?",
+        "What's the most similar product that Aldi have with comprehensive ingredient and nutrient data?"
+    ]
+}
+
+# Define conversation states
+ASK_SCENARIO, ASK_QUESTION, ENTER_COMPETITOR, UPLOAD_IMAGE = range(4)
+
+# Define the different scenarios and their corresponding prompts
+scenarios = {
+    'Scan Aldi Product': [
+        "What are the similar products from competitors with comprehensive ingredient and nutrient data?",
+        "What's the difference between Aldi Products and our competitor's similar products regarding ingredients and nutrients?",
+        "What certifications (gluten-free, vegan, fair trade) do the competitor's product have?",
+        "What would make our products more appealing compared to competitor's product?"
+    ],
+    'Scan Competitor Product': [
+        "What are the similar products from other competitors with comprehensive ingredient and nutrient data?",
+        "What's the difference between competitor's similar products regarding ingredients and nutrients?",
+        "What certifications (gluten-free, vegan, fair trade) do the competitor's product have?",
+        "What's the most similar product that Aldi have with comprehensive ingredient and nutrient data?"
+    ]
+}
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Starts the conversation and asks the user to write info about the product."""
+    """Starts the conversation and asks the user to choose a scenario."""
+    reply_keyboard = [['Scan Aldi Product', 'Scan Competitor Product']]
     await update.message.reply_text(
-        "Hi! I'm your product comparison bot. Ask a question about your product:",
-        reply_markup=ReplyKeyboardRemove(),
+        "Hi! I'm your product comparison bot. Choose a scenario:",
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
     )
+    return ASK_SCENARIO
 
-    update_queue = None  # Create an instance of UpdateQueue
-    # updater = Updater(bot=bot, update_queue=update_queue)
-    
-    # dispatcher = updater.dispatcher
+async def ask_scenario(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Stores the chosen scenario and asks for a question."""
+    user = update.message.from_user
+    scenario = update.message.text
+    context.user_data['scenario'] = scenario
+    logger.info("Scenario from %s: %s", user.first_name, scenario)
 
-    # # Command handler for /start
-    # dispatcher.add_handler(CommandHandler('start', start))
+    if scenario in scenarios:
+        prompt_text = "You can ask questions like:\n" + "\n".join(scenarios[scenario])
+        await update.message.reply_text(
+            f"You chose: {scenario}\n{prompt_text}\n\nPlease ask your question:"
+        )
+    else:
+        await update.message.reply_text("Please choose a valid scenario.")
+        return ASK_SCENARIO
 
-    # conv_handler = ConversationHandler(
-    #     entry_points=[CommandHandler('start', start)],
-    #     states={
-    #         ASK_QUESTION: [MessageHandler(Filters.text & ~Filters.command, ask_question)],
-    #         ENTER_COMPETITOR: [MessageHandler(Filters.text & ~Filters.command, enter_competitor)],
-    #         UPLOAD_IMAGE: [MessageHandler(Filters.photo, upload_image)],
-    #     },
-    #     fallbacks=[CommandHandler('cancel', cancel)],
-    # )
-
-    # # dp.add_handler(conv_handler)
-    # updater.start_polling()
-    # updater.idle()
     return ASK_QUESTION
 
 async def ask_question(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -137,34 +170,32 @@ async def enter_competitor(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     return UPLOAD_IMAGE
 
 async def upload_image(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Stores the product image and gives an output."""
+    """Stores the product image and provides an output based on the scenario."""
     user = update.message.from_user
     photo_file = await update.message.photo[-1].get_file()
     await photo_file.download_to_drive("product_image.jpg")
     logger.info("Photo of %s: %s", user.first_name, "product_image.jpg")
 
-    # # Retrieve product_rag from context
+    # Retrieve product_rag from context
     # product_rag = context.bot_data['product_rag']
+    
+    # Retrieve user inputs
+    question = context.user_data['question']
+    scenario = context.user_data['scenario']
 
-    # print ('product_rag')
+    # User input description for ALDI's waffles
+    if scenario == 'Scan Aldi Product':
+        input_description = "Aldi's vanilla waffles 500g"
+    else:
+        input_description = context.user_data['competitor']  # Adjust this as needed
 
+    # Asking the comparative question
+    # answer = product_rag.ask_question(input_description, 3, question)
 
-    # # User input description for ALDI's waffles
-    # aldis_waffles_input = "Aldi's vanilla waffles 500g"
-
-    # # Asking a comparative question about ALDI's waffles compared to similar products from Netto and Lidl
-    # comparative_question = 'check the nutritional labels of each product online and tell Which is healthier, the input or the similar products?'
-
-    # # Getting the answer by comparing the top 3 similar products
-    # answer = product_rag.ask_question(aldis_waffles_input, 3, comparative_question)
-
-    # # Print the answer provided by the RAG system
+    # Print the answer provided by the RAG system
     # print(answer)
 
-
-    # await update.message.reply_text(
-    #     answer
-    # )
+    # await update.message.reply_text(answer)
 
     return ConversationHandler.END
 
@@ -175,7 +206,6 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(
         "Bye! I hope we can talk again some day.", reply_markup=ReplyKeyboardRemove()
     )
-
     return ConversationHandler.END
 
 def main() -> None:
@@ -191,17 +221,16 @@ def main() -> None:
     })
 
     # product_rag = ProductRAG(df_description, 'sk-proj-KPmObpzz1tZO2uSsVLdMT3BlbkFJZeQ8Q9Ys5H8K5CRRdtzH')
-    # # Store product_rag in bot_data
-   
-
+    
     # Create the Application and pass it your bot's token.
     application = Application.builder().token("7389289933:AAGiJFsmA6RZlXqGiPU8KcPHs1Troq7K-WY").build()
     # application.bot_data['product_rag'] = product_rag
 
-    # Add conversation handler with the states ASK_QUESTION, ENTER_COMPETITOR, UPLOAD_IMAGE
+    # Add conversation handler with the states ASK_SCENARIO, ASK_QUESTION, ENTER_COMPETITOR, UPLOAD_IMAGE
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
+            ASK_SCENARIO: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_scenario)],
             ASK_QUESTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_question)],
             ENTER_COMPETITOR: [MessageHandler(filters.TEXT & ~filters.COMMAND, enter_competitor)],
             UPLOAD_IMAGE: [MessageHandler(filters.PHOTO, upload_image)],
