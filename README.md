@@ -1,6 +1,54 @@
-Easy Compare ChatBot
+EasyCompare – AI-Powered Shopping Assistant 🚀
+Overview
+EasyCompare is an AI-powered Telegram chatbot that allows users to compare products by sending images and brand names. It provides insights on price, calories, allergens, ingredients, and nutrients to assist in data-driven procurement decisions.
 
- 𝗖𝗵𝗮𝗹𝗹𝗲𝗻𝗴𝗲:
-🛠️ 𝗗𝗲𝘃𝗲𝗹𝗼𝗽 𝗮 𝘁𝗼𝗼𝗹 to extract and analyze product attributes (ingredients, nutritional values, certifications) from online images using OCR and AI.
-👩‍💻 𝗗𝗲𝘀𝗶𝗴𝗻 𝗮 𝘂𝘀𝗲𝗿-𝗳𝗿𝗶𝗲𝗻𝗱𝗹𝘆 𝗶𝗻𝘁𝗲𝗿𝗳𝗮𝗰𝗲 that simplifies complex data for easy decision-making.
-𝗪𝗵𝘆 𝗜𝘁 𝗺𝗮𝘁𝘁𝗲𝗿𝘀: Your innovative solution will enable ALDI Süd to benchmark its products against the competition, driving smarter product development and better meeting consumer needs.
+🚀 Getting Started
+1️⃣ Clone the Repository
+bash
+Copy
+Edit
+git clone -b streamlit_helen https://github.com/hsirenko/Aldi.git
+cd Aldi
+2️⃣ Set Up a Virtual Environment (Recommended)
+bash
+Copy
+Edit
+python3 -m venv venv
+source venv/bin/activate  # For macOS/Linux
+venv\Scripts\activate     # For Windows
+3️⃣ Install Dependencies
+bash
+Copy
+Edit
+pip install -r requirements.txt
+4️⃣ Set Up Environment Variables
+Create a .env file in the root directory and add the following:
+
+ini
+Copy
+Edit
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+API_URL=your_backend_api_url  # If applicable
+Replace your_telegram_bot_token with the Telegram Bot API token obtained from BotFather.
+
+5️⃣ Start the Server
+bash
+Copy
+Edit
+python bot.py
+This will launch the Telegram bot, allowing it to process incoming messages.
+
+💬 How to Use the Telegram Chatbot
+Open Telegram and search for your bot.
+
+Start a chat with the bot using /start.
+
+Send an image of a product and specify the brand name in the message.
+
+The bot will analyze the image and return comparisons with similar products.
+
+🔧 Troubleshooting
+If the bot doesn't respond, check that:
+✅ The bot token is correctly set in .env
+✅ The server is running and listening for requests
+✅ Dependencies are correctly installed
