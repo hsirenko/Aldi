@@ -1,12 +1,14 @@
-EasyCompare – AI-Powered Shopping Assistant 🚀
-Overview
-EasyCompare is an AI-powered Telegram chatbot that allows users to compare products by sending images and brand names. It provides insights on price, calories, allergens, ingredients, and nutrients to assist in data-driven procurement decisions.
+# EasyCompare – AI-Powered Shopping Assistant 🚀  
 
-🚀 Getting Started
-1️⃣ Clone the Repository
-bash
-Copy
-Edit
+## 📌 Overview  
+**EasyCompare** is an AI-powered **Telegram chatbot** that allows users to compare products by sending images and brand names. It provides insights on **price, calories, allergens, ingredients, and nutrients** to assist in **data-driven procurement decisions**.  
+
+---
+
+## 🚀 Getting Started  
+
+### 1️⃣ Clone the Repository  
+```bash
 git clone -b streamlit_helen https://github.com/hsirenko/Aldi.git
 cd Aldi
 2️⃣ Set Up a Virtual Environment (Recommended)
@@ -39,13 +41,10 @@ python bot.py
 This will launch the Telegram bot, allowing it to process incoming messages.
 
 💬 How to Use the Telegram Chatbot
-Open Telegram and search for your bot.
-
-Start a chat with the bot using /start.
-
-Send an image of a product and specify the brand name in the message.
-
-The bot will analyze the image and return comparisons with similar products.
+1️⃣ Open Telegram and search for your bot.
+2️⃣ Start a chat with the bot using /start.
+3️⃣ Send an image of a product and specify the brand name in the message.
+4️⃣ The bot will analyze the image and return comparisons with similar products.
 
 🔧 Troubleshooting
 If the bot doesn't respond, check that:
