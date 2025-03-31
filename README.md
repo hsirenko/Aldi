@@ -1,4 +1,4 @@
-EasyCompare ChatBot
+Easy Compare ChatBot
 
  𝗖𝗵𝗮𝗹𝗹𝗲𝗻𝗴𝗲:
 🛠️ 𝗗𝗲𝘃𝗲𝗹𝗼𝗽 𝗮 𝘁𝗼𝗼𝗹 to extract and analyze product attributes (ingredients, nutritional values, certifications) from online images using OCR and AI.
