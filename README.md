@@ -9,10 +9,10 @@ It provides insights on **price, calories, allergens, ingredients, and nutrients
 EasyCompare was designed for procurement and category managers and built during HerHackathon 2024 in Mannheim.
 
 The concept is simple:
-📸 Snap a photo of a product sold at Aldi 
-🏷 Specify the brand
-❓ Ask questions about price, calories, allergens, ingredients, or nutrients
-🔍 Instantly compare similar products, helping teams make faster, data-driven purchasing decisions.
+📸 Snap a photo of a product sold at Aldi <br>
+🏷 Specify the brand  <br>
+❓ Ask questions about price, calories, allergens, ingredients, or nutrients  <br>
+🔍 Instantly compare similar products, helping teams make faster, data-driven purchasing decisions.  <br>
 
 🔧 My Contributions
 Hackathon Execution & Product Vision – Led the strategic direction, ensuring the solution aligned with ALDI Süd's business needs. I also took charge of pitching the product to stakeholders, demonstrating its real-world impact.
