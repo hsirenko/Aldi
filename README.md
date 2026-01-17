@@ -6,9 +6,6 @@ EasyCompare is an AI-powered **Telegram chatbot** that allows users to compare p
 It provides insights on **price, calories, allergens, ingredients, and nutrients** to assist in **data-driven procurement decisions**.
 
 ---
-EasyCompare, an AI-powered shopping assistant built during HerHackathon 2024 in Mannheim. It was my first-ever hackathon, and I joined with zero expectations—but ended up winning!
-
-🌟 What is EasyCompare?
 EasyCompare was designed for procurement and category managers and built during HerHackathon 2024 in Mannheim.
 
 The concept is simple:
