@@ -1,99 +1,124 @@
-import faiss
-import numpy as np
-import pandas as pd
-import torch
-from transformers import AutoTokenizer, AutoModel
-import openai
+from __future__ import annotations
 
-class ProductRAG:
-    def __init__(self, df_description, openai_api_key):
+import logging
+import os
+from typing import List
+
+import pandas as pd
+
+from interfaces import LLMProvider
+
+logger = logging.getLogger(__name__)
+
+
+class ProductRAG(LLMProvider):
+    """Embed product descriptions, retrieve similar rows with FAISS, answer with an LLM."""
+
+    def __init__(
+        self,
+        df_description: pd.DataFrame,
+        openai_api_key: str,
+        chat_model: str | None = None,
+    ):
+        from openai import OpenAI
+        from transformers import AutoModel, AutoTokenizer
+
         self.model_name = "sentence-transformers/all-MiniLM-L12-v2"
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.model = AutoModel.from_pretrained(self.model_name)
-        # self.df = df_description
-        # self.index = None
-        # self.openai_api_key = openai_api_key
-        # self.build_index()
+        self.df = df_description.reset_index(drop=True)
+        base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
+        self.client = OpenAI(api_key=openai_api_key, base_url=base_url)
+        self.chat_model = chat_model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        self.index: object | None = None
+        self.build_index()
 
-    def encode_descriptions(self, descriptions):
-        encoded_input = self.tokenizer(descriptions, padding=True, truncation=True, return_tensors="pt", max_length=128)
+    def encode_descriptions(self, descriptions: List[str]):
+        import torch
+
+        encoded_input = self.tokenizer(
+            descriptions,
+            padding=True,
+            truncation=True,
+            return_tensors="pt",
+            max_length=128,
+        )
         with torch.no_grad():
             model_output = self.model(**encoded_input)
             embeddings = model_output.last_hidden_state.mean(dim=1)
-        return embeddings.numpy()
+        return embeddings.numpy().astype("float32")
 
-    def build_index(self):
-        descriptions = self.df['description'].tolist()
+    def build_index(self) -> None:
+        import faiss
+
+        descriptions = self.df["description"].tolist()
         embeddings = self.encode_descriptions(descriptions)
         self.index = faiss.IndexFlatL2(embeddings.shape[1])
         self.index.add(embeddings)
 
-    def search(self, p_desc, k):
+    def search(self, p_desc: str, k: int) -> pd.DataFrame:
+        if self.index is None:
+            raise RuntimeError("Index not built")
         query_embedding = self.encode_descriptions([p_desc])
-        distances, indices = self.index.search(query_embedding, k)
-        return self.df.iloc[indices[0]]
+        _distances, indices = self.index.search(query_embedding, k)
+        idx = indices[0]
+        return self.df.iloc[idx].copy()
 
-    def ask_question(self, input_description, k, question):
+    def ask_question(self, input_description: str, k: int, question: str) -> str:
         similar_products = self.search(input_description, k)
-        descriptions = similar_products['description'].tolist()
-        context = f"Input product: {input_description}. Similar products: " + ", ".join(descriptions)
-        print(context) #Debugging
+        descriptions: List[str] = similar_products["description"].tolist()
+        context = (
+            f"Input product (from user, may include OCR text): {input_description}. "
+            f"Similar catalog products: " + "; ".join(descriptions)
+        )
+        logger.debug("RAG context length=%s", len(context))
         return self.generate_response(question, context)
 
-
-    def generate_response(self, question, context):
-        openai.api_key = self.openai_api_key
-        prompt = f"Question: {question}\nContext: {context}\nAnswer:"
-        response = openai.ChatCompletion.create(
-            model='gpt-4o-2024-05-13',
+    def generate_response(self, question: str, context: str) -> str:
+        prompt = f"Question: {question}\nContext: {context}\nAnswer concisely. If context lacks facts, say so."
+        response = self.client.chat.completions.create(
+            model=self.chat_model,
             temperature=0,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0,
-            messages=[{"role": "system", "content": "You are a helpful assistant."},
-                      {"role": "user", "content": prompt}]
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a procurement assistant comparing grocery products. "
+                        "Use only the context when stating specific product facts."
+                    ),
+                },
+                {"role": "user", "content": prompt},
+            ],
         )
-        return response['choices'][0]['message']['content'].strip()
+        choice = response.choices[0].message
+        return (choice.content or "").strip()
 
 
-# # Example usage:
-# if __name__ == "__main__":
-#     df_description = pd.DataFrame({
-#         'description': [
-#             "Fresh organic strawberries 500g",
-#             "Low-fat milk 1 liter",
-#             "Whole wheat bread loaf",
-#             "Pack of 12 free-range eggs"
-#         ]
-#     })
+def _demo() -> None:
+    logging.basicConfig(level=logging.INFO)
+    key = os.getenv("OPENAI_API_KEY")
+    if not key:
+        print("Set OPENAI_API_KEY to run the demo.")
+        return
+    df_description = pd.DataFrame(
+        {
+            "description": [
+                "Lidl Belgian waffles 500g",
+                "Netto maple syrup waffles 450g",
+                "Lidl chocolate waffles 300g",
+                "Netto classic waffles 500g",
+                "Aldi blueberry waffles 400g",
+            ]
+        }
+    )
+    product_rag = ProductRAG(df_description, key)
+    answer = product_rag.ask_question(
+        "Aldi's vanilla waffles 500g",
+        3,
+        "Which option is likely lower in sugar based on descriptions only?",
+    )
+    print(answer)
 
-#     product_rag = ProductRAG(df_description, 'your-openai-api-key')
-#     answer = product_rag.ask_question("Organic eggs 6 pack", 2, "How does Organic eggs 6 pack compare to similar products?")
-#     print(answer)
 
 if __name__ == "__main__":
-    # DataFrame with descriptions of waffle products from Lidl, Netto, and potentially other products
-    df_description = pd.DataFrame({
-        'description': [
-            "Lidl Belgian waffles 500g",
-            "Netto maple syrup waffles 450g",
-            "Lidl chocolate waffles 300g",
-            "Netto classic waffles 500g",
-            "Aldi blueberry waffles 400g"  # This is an existing product just for example completeness
-        ]
-    })
-
-    # Initialize the ProductRAG instance with the DataFrame and your OpenAI API key
-    product_rag = ProductRAG(df_description, 'sk-proj-KPmObpzz1tZO2uSsVLdMT3BlbkFJZeQ8Q9Ys5H8K5CRRdtzH')
-
-    # User input description for ALDI's waffles
-    aldis_waffles_input = "Aldi's vanilla waffles 500g"
-
-    # Asking a comparative question about ALDI's waffles compared to similar products from Netto and Lidl
-    comparative_question = 'check the nutritional labels of each product online and tell Which is healthier, the input or the similar products?'
-
-    # Getting the answer by comparing the top 3 similar products
-    answer = product_rag.ask_question(aldis_waffles_input, 3, comparative_question)
-
-    # Print the answer provided by the RAG system
-    print(answer)
+    _demo()
